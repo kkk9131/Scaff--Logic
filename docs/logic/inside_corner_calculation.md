@@ -42,6 +42,12 @@ edge6              edge2
   edge6: 左辺
 
 入隅部分の2辺: edge4とedge5
+
+各面の構成:
+  上面（北）: edge1
+  右面（東）: edge2
+  下面（南）: edge3, edge5
+  左面（西）: edge4, edge6
 ```
 
 ### 座標表現
