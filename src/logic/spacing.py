@@ -128,6 +128,98 @@ def calculate_optimal_clearance(
     )
 
 
+def calculate_inside_corner_clearance(
+    base_clearance: float,
+    perpendicular_edge_length: float,
+    target_clearance: float = 900.0,
+    min_clearance: float | None = None,
+    eave_overhang: float | None = None,
+    span_unit: float = 300.0
+) -> float:
+    """
+    入隅辺の最適な離隔距離を計算する
+
+    入隅の辺は、同じ方向（ベクトル）の外周辺の離隔距離を基準とし、
+    垂直方向の入隅辺の長さを加算した後、300の倍数を引いて
+    目標離隔距離に最も近づける。
+
+    Args:
+        base_clearance: 同じ方向の外周辺の離隔距離（mm）
+        perpendicular_edge_length: 垂直方向の入隅辺の長さ（mm）
+        target_clearance: 目標離隔距離（mm）。デフォルトは900mm
+        min_clearance: 最小許容離隔距離（mm）。指定がない場合は0
+        eave_overhang: 軒の出（mm）。指定された場合、min_clearanceは軒の出+80mm以上となる
+        span_unit: スパンの最小単位（mm）。デフォルトは300mm
+
+    Returns:
+        float: 入隅辺の最適離隔距離（mm）
+
+    計算ロジック:
+        1. 最小離隔距離を決定（軒の出がある場合は軒の出+80mm）
+        2. base_clearance + perpendicular_edge_length を計算
+        3. そこから300の倍数を引いて、目標離隔距離に最も近い値を選択
+        4. 最小離隔距離以上であることを確認
+
+    Examples:
+        >>> # edge4の計算: edge6の離隔850mm + edge5の長さ4000mm
+        >>> calculate_inside_corner_clearance(850, 4000)
+        950.0
+
+        >>> # edge5の計算: edge1の離隔850mm + edge4の長さ4000mm
+        >>> calculate_inside_corner_clearance(850, 4000)
+        950.0
+
+        >>> # edge5に軒の出1000mmがある場合
+        >>> calculate_inside_corner_clearance(850, 4000, eave_overhang=1000)
+        1250.0
+    """
+    # 最小離隔距離の決定
+    if eave_overhang is not None:
+        # 軒の出がある場合: 軒の出 + 80mm 以上
+        eave_min = eave_overhang + 80.0
+        if min_clearance is not None:
+            min_clearance = max(min_clearance, eave_min)
+        else:
+            min_clearance = eave_min
+
+    if min_clearance is None:
+        # デフォルトは0（制約なし）
+        min_clearance = 0.0
+
+    # 基準値を計算: 同じ方向の外周辺の離隔 + 垂直方向の入隅辺の長さ
+    base_value = base_clearance + perpendicular_edge_length
+
+    # 300の倍数を引いて、目標離隔距離に最も近い値を探索
+    best_clearance = None
+    min_diff = float('inf')
+
+    # 探索範囲: 0から base_value まで、300の倍数ごとに
+    # base_value - (300 * n) の形で探索
+    max_multiplier = int(base_value / span_unit) + 1
+
+    for n in range(max_multiplier + 1):
+        subtract_value = span_unit * n
+        candidate_clearance = base_value - subtract_value
+
+        # 負の値は除外
+        if candidate_clearance < 0:
+            continue
+
+        # 最小離隔距離を満たしているか確認
+        if candidate_clearance >= min_clearance:
+            diff = abs(candidate_clearance - target_clearance)
+            if diff < min_diff:
+                min_diff = diff
+                best_clearance = candidate_clearance
+
+    # 候補が見つからない場合（通常はありえないが念のため）
+    if best_clearance is None:
+        # 最小離隔距離を満たす最小の値を使用
+        best_clearance = max(min_clearance, 0.0)
+
+    return best_clearance
+
+
 def calculate_rectangular_scaffold(
     width_x: float,
     width_y: float,
