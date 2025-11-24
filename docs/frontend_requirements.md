@@ -1,11 +1,11 @@
 # フロントエンド要件定義（足場割付計算システム）
 
 ## 1. 要件定義
-- 目的: 図面インポート→線抽出→形状自動判定→計算→可視化→図面出力を一連のUIで完結させる。
+- 目的: 図面インポート→線抽出→形状自動判定→計算→可視化→図面出力を一連のUIで完結。
 - データ保管: ブラウザローカル（localStorage/IndexedDB）。サーバー永続化と認証は後日追加。
 - 精度: 寸法・計算結果の許容誤差±0.1%（最低±1mm）。
 - パフォーマンス目標: 計算応答≤1s、線抽出≤3s（5MB DXF/PDFまたは3000x3000px画像）。
-- 対応ブラウザ: 最新Chrome/Edgeを優先（WebXRもここを対象）。Safariは要検証。
+- 対応ブラウザ: 最新Chrome/Edgeを優先。Safariは要検証。
 - 対応ファイル: DXF R12–R2018、PDFベクタ図、画像は3000x3000px程度まで。拡張子・サイズチェック必須。
 - オフライン: インポート〜計算〜出力はネット不要。ライブラリ取得やXRはオンライン前提。
 
@@ -24,15 +24,15 @@
 12) 設定（デフォルト離隔/スパン、テーマ、APIエンドポイント切替）
 
 ## 3. 推奨技術スタック（フロント）
-- 3D/可視化: Three.js r178 固定（WebGL2/Float16対応）。
-- WebXR/AR: A-Frame 1.7.0 でPoC（将来 Three.js + WebXR に置換可）。
-- DXFパース: `dxf` npm 5.3.1（活発メンテ）。代替として `dxf-parser` を検証用に保持。
+- 3D/可視化: Three.js r178 固定。
+- WebXR/AR: A-Frame 1.7.0（PoC用、将来 Three.js + WebXR に置換可）。
+- DXFパース: `dxf` npm 5.3.1（活発メンテ）。`dxf-parser` は代替。
 - PDF: Mozilla `pdf.js` ESM版。
 - 画像線検出: `opencv.js` (WASM) with Canny/Hough。
 - 幾何処理: `clipper-lib`（オフセット）、`polygon-clipping`（ブーリアン）、`turf`（長さ/面積）。
-- DXF出力: `dxf-writer` または `three-dxf`; PDF出力: `pdfkit` / `jspdf`。
-- 状態管理: TanStack Query（APIキャッシュ）＋ Zustand または Recoil（UI状態）。
-- 2D描画: SVG/Canvasベース。Reactの場合は `react-konva` 併用可。
+- DXF出力: `dxf-writer` / `three-dxf`; PDF出力: `pdfkit` / `jspdf`。
+- 状態管理: TanStack Query ＋ Zustand/Recoil。
+- 2D描画: SVG/Canvas。Reactなら `react-konva` 併用可。
 
 ## 4. データ・運用前提
 - 永続化はローカルのみ。履歴件数は5–10件を目安にローテーション。
